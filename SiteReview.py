@@ -5,7 +5,7 @@ import pytesseract
 import simplejson
 import calendar
 import time
-import os
+import os, inspect
 import base64
 
 
@@ -47,7 +47,9 @@ class SiteReview:
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk:
                     f.write(chunk)
-        pytesseract.pytesseract.tesseract_cmd = r'C:\Users\Мария\AppData\Local\Tesseract-OCR\tesseract.exe'
+        current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        tesseract_dir = current_dir + r'\pytesseract\tesseract.exe'
+        pytesseract.pytesseract.tesseract_cmd = tesseract_dir
         captcha = pytesseract.image_to_string(Image.open('captcha.jpg'))
         captcha = "".join(captcha.split())
         os.remove('captcha.jpg')
