@@ -9,6 +9,11 @@ import os, inspect
 import base64
 
 
+class Wrong_TLD(Exception):
+    def __init__(self, message="Wrong Top-Level Domain"):
+        self.message = message
+        super().__init__(self.message)
+
 class SiteReview:
     headers = {
         'authority': 'sitereview.bluecoat.com',
@@ -74,6 +79,8 @@ class SiteReview:
         response = requests.post('https://sitereview.bluecoat.com/resource/lookup', headers=self.headers, data=data)
         if response.status_code == 200:
             return json.loads(response.text)['categorization']
+        if response.status_code == 422:
+            raise Wrong_TLD
         elif not is_again:
             self.captcha_recognize()
             return self.get_category(url, True)
