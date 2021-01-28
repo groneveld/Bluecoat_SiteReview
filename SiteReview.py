@@ -1,12 +1,13 @@
-import requests
-import json
-from PIL import Image
-import pytesseract
-import simplejson
-import calendar
-import time
-import os, inspect
 import base64
+import calendar
+import inspect
+import json
+import os
+import time
+
+import pytesseract
+import requests
+from PIL import Image
 
 
 class Wrong_TLD(Exception):
@@ -74,10 +75,19 @@ class SiteReview:
         response = requests.get(f'https://sitereview.bluecoat.com/resource/captcha-request/{captcha}',
                                 headers=self._headers)
 
-    def get_category(self, url: str, is_again=False) -> str:
+    def get_names_only(self, categories):
+        answers = []
+        for answer in categories:
+            category_name = answer['name']
+            answers.append(category_name[category_name.find("(") + 1:category_name.find(")")])
+        return answers
+
+    def get_category(self, url: str, names_only=False, is_again=False) -> str:
         data = self.get_data(url)
         response = requests.post('https://sitereview.bluecoat.com/resource/lookup', headers=self.headers, data=data)
         if response.status_code == 200:
+            if names_only:
+                return self.get_names_only(json.loads(response.text)['categorization'])
             return json.loads(response.text)['categorization']
         if response.status_code == 422:
             raise Wrong_TLD
@@ -85,7 +95,6 @@ class SiteReview:
             self.captcha_recognize()
             return self.get_category(url, True)
         else:
-            start = time.time()
             time.sleep(5)
             self.captcha_recognize()
             return self.get_category(url, True)
